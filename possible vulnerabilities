@@ -1,0 +1,15 @@
+possible vulnerabilities:
+Deadline: Time should be in hours or days
+
+Fallback function in Project must not be executed as it might be used to cause infinite loop.
+
+Fundinghub should check if contribution is to the projects in ProjectAdd 
+
+Payout should check if 
+
+Fundinghub should also keep track of contributors and contributions
+
+
+
+Funding hub should only release funds to the projects after funding goal is reached.
+It should return the funding or let others withdraw funding if goal is not meet.

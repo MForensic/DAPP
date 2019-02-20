@@ -1,0 +1,91 @@
+
+
+Constructor function name was different(piggyBank()) from contract Name. Thus, anyone calling the 
+piggyBank() could become the owner, could kill the contract and get all the ethers.
+
+pragma solidity ^0.4.5;
+
+contract PiggyBank {
+    address owner;
+    uint248 balance;
+
+    function PiggyBank() {
+        owner = msg.sender;
+        balance += uint248(msg.value);
+    }
+
+    function () payable {
+        if (msg.sender != owner) throw;
+        balance += uint248(msg.value);
+    }
+
+    function kill() {
+        if (msg.sender != owner) throw;
+        selfdestruct(owner);
+    }
+}
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+pragma solidity ^0.4.5;
+
+*purchase function has to be payable and it should also check if the paid amount is not less than the product price. It should also check if it is possible to ship to the given address, before send the amount to the wallet.
+
+contract WarehouseI {
+    function ship(uint id, address customer) returns (bool handled);
+}
+
+contract Store {
+    struct product {
+        string name;
+        uint price;
+    }
+    mapping (uint => product) public products;
+    address wallet;
+    WarehouseI warehouse;
+   // public products = [];
+
+    function Store(address _wallet, address _warehouse) {
+        wallet = _wallet;
+        warehouse = WarehouseI(_warehouse);
+    }
+
+    function purchase(uint id) payable returns (bool success) {
+        if(msg.value < products[id].price){
+            throw;
+            
+        }
+       if(!WarehouseI(warehouse).ship(id, msg.sender)){
+           throw;
+       }
+
+       wallet.send(msg.value);
+       return warehouse.ship(id, msg.sender);
+    }
+}
+
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+contract is vulnerable to function reentry and contract function can be called repeatedly and of the gas can be used up, draining the contract. So to prevent this i limited the amount of gas.
+
+pragma solidity ^0.4.4;
+
+contract Splitter {
+    address one;
+    address two;
+
+    function Splitter (address _two) {
+     if (msg.value > 0) throw;
+        one = msg.sender;
+        two = _two;
+    }
+
+    function () payable {
+        if (msg.value <= 0) throw;
+
+        uint amount = this.balance / 3;
+        if (!one.call.value(amount).gas(2300)()) throw;
+        if (!two.call.value(amount).gas(2300)()) throw;
+    }
+}
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
